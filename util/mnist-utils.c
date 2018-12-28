@@ -141,6 +141,7 @@ MNIST_Image getImage(FILE *imageFile){
     MNIST_Image img;
     size_t result;
     count++;
+    #pragma omp critical(fread)
     result = fread(&img, sizeof(img), 1, imageFile);
     if (result!=1) {
         printf("\nError when reading IMAGE file! Abort! %d\n", count);
@@ -161,6 +162,7 @@ MNIST_Label getLabel(FILE *labelFile){
     
     MNIST_Label lbl;
     size_t result;
+    #pragma omp critical(fread)
     result = fread(&lbl, sizeof(lbl), 1, labelFile);
     if (result!=1) {
         printf("\nError when reading LABEL file! Abort!\n");

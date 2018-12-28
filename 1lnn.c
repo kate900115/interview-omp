@@ -149,13 +149,29 @@ void updateCellWeights(Cell *c, double err){
  */
 
 void trainCell(Cell *c, MNIST_Image *img, int target){
-    
-    setCellInput(c, img);
-    calcCellOutput(c);
-    
-    // learning (by updating the weights)
-    double err = getCellError(c, target);
-    updateCellWeights(c, err);
+
+    double unnormalized_err = target * NUMBER_OF_INPUT_CELLS;
+//    double temp;
+//    c->output=0;
+    #pragma omp parallel for
+    for (int i=0; i<NUMBER_OF_INPUT_CELLS; i++){
+	if (img->pixel[i]){
+     //   c->input[i] = img->pixel[i] ? 1 : 0; 
+//	temp = c->input[i] * c->weight[i];
+     //   c->output += temp;
+//	unnormalized_err = unnormalized_err - c->input[i] * c->weight[i];
+  //      c->weight[i] += LEARNING_RATE * c->input[i] * unnormalized_err/NUMBER_OF_INPUT_CELLS;
+
+		unnormalized_err = unnormalized_err - c->weight[i];
+        //	c->weight[i] += LEARNING_RATE * unnormalized_err/NUMBER_OF_INPUT_CELLS;
+		c->weight[i] += 0.0000637755 * unnormalized_err;
+
+
+	}
+    }
+
+   // c->output = c->output/NUMBER_OF_INPUT_CELLS;
+   
 }
 
 

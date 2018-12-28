@@ -32,7 +32,7 @@
 #include "mnist-stats.h"
 #include "1lnn.h"
 
-
+#include <omp.h>
 
 
 
@@ -60,15 +60,17 @@ void trainLayer(Layer *l){
     time_t startTrainingTime = time(NULL); 
     
     // Loop through all images in the file
+
+    
     for (int imgCount=0; imgCount<MNIST_MAX_TRAINING_IMAGES; imgCount++){
         
         // display progress
-        //displayLoadingProgressTraining(imgCount,3,5);
+        displayLoadingProgressTraining(imgCount,3,5);
         
         // Reading next image and corresponding label
         MNIST_Image img = getImage(imageFile);
         MNIST_Label lbl = getLabel(labelFile);
-        
+
         // set target ouput of the number displayed in the current image (=label) to 1, all others to 0
         Vector targetOutput;
         targetOutput = getTargetOutput(lbl);
@@ -124,6 +126,7 @@ void testLayer(Layer *l){
     time_t startTestingTime = time(NULL);
  
     // Loop through all images in the file
+    #pragma omp parallel for
     for (int imgCount=0; imgCount<MNIST_MAX_TESTING_IMAGES; imgCount++){
         
         // display progress
@@ -142,7 +145,6 @@ void testLayer(Layer *l){
         // loop through all output cells for the given image
         for (int i=0; i < NUMBER_OF_OUTPUT_CELLS; i++){
             testCell(&l->cell[i], &img, targetOutput.val[i]);
-
         }
         
         int predictedNum = getLayerPrediction(l);
