@@ -153,7 +153,7 @@ void trainCell(Cell *c, MNIST_Image *img, int target){
     double unnormalized_err = target * NUMBER_OF_INPUT_CELLS;
 //    double temp;
 //    c->output=0;
-    #pragma omp parallel for
+    #pragma omp simd
     for (int i=0; i<NUMBER_OF_INPUT_CELLS; i++){
 	if (img->pixel[i]){
      //   c->input[i] = img->pixel[i] ? 1 : 0; 
