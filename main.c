@@ -96,17 +96,18 @@ void trainLayer(Layer *l){
      		//   c->output += temp;
 		//	unnormalized_err = unnormalized_err - c->input[i] * c->weight[i];
 		//      c->weight[i] += LEARNING_RATE * c->input[i] * unnormalized_err/NUMBER_OF_INPUT_CELLS;
-			temp_l_cell_j += l->cell[j].weight[i];
+			temp_l_cell_j = temp_l_cell_j + l->cell[j].weight[i];
 			unnormalized_err = unnormalized_err - l->cell[j].weight[i];
        	 	//	c->weight[i] += LEARNING_RATE * unnormalized_err/NUMBER_OF_INPUT_CELLS;
 			l->cell[j].weight[i] += 0.0000637755 * unnormalized_err;
 		}
    	    }
-   	    l->cell[j].output = temp_l_cell_j/NUMBER_OF_INPUT_CELLS;
+   	    //l->cell[j].output = temp_l_cell_j/NUMBER_OF_INPUT_CELLS;
+            temp_l_cell_j = temp_l_cell_j/NUMBER_OF_INPUT_CELLS;
+
         
-        
-            if (l->cell[j].output > maxOut){
-            	maxOut = l->cell[j].output;
+            if (temp_l_cell_j > maxOut){
+            	maxOut = temp_l_cell_j;
             	maxInd = j;
             }
     	}
