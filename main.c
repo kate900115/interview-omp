@@ -61,16 +61,22 @@ void trainLayer(Layer *l){
     
     // Loop through all images in the file
 
-    
+    int readImg;
+
+    #pragma omp parallel for 
     for (int imgCount=0; imgCount<MNIST_MAX_TRAINING_IMAGES; imgCount++){
         
         // display progress
         displayLoadingProgressTraining(imgCount,3,5);
         
         // Reading next image and corresponding label
-        MNIST_Image img = getImage(imageFile);
-        MNIST_Label lbl = getLabel(labelFile);
-
+	MNIST_Image img;
+	MNIST_Label lbl;
+	#pragma omp critical(readImg)
+	{
+        	img = getImage(imageFile);
+        	lbl = getLabel(labelFile);
+	}
         // set target ouput of the number displayed in the current image (=label) to 1, all others to 0
         Vector targetOutput;
         targetOutput = getTargetOutput(lbl);
@@ -125,6 +131,8 @@ void testLayer(Layer *l){
    
     time_t startTestingTime = time(NULL);
  
+    int readImg;
+
     // Loop through all images in the file
     #pragma omp parallel for
     for (int imgCount=0; imgCount<MNIST_MAX_TESTING_IMAGES; imgCount++){
@@ -133,8 +141,13 @@ void testLayer(Layer *l){
         displayLoadingProgressTesting(imgCount,5,5);
         
         // Reading next image and corresponding label
-        MNIST_Image img = getImage(imageFile);
-        MNIST_Label lbl = getLabel(labelFile);
+	MNIST_Image img;
+	MNIST_Label lbl;
+	#pragma omp critical(readImg)
+	{
+        	img = getImage(imageFile);
+        	lbl = getLabel(labelFile);
+	}
         
         // set target ouput of the number displayed in the current image (=label) to 1, all others to 0
         Vector targetOutput;
