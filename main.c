@@ -63,34 +63,31 @@ void trainLayer(Layer *l){
 
     int readImg;
 
-    #pragma omp parallel for 
     for (int imgCount=0; imgCount<MNIST_MAX_TRAINING_IMAGES; imgCount++){
         
         // display progress
         displayLoadingProgressTraining(imgCount,3,5);
         
         // Reading next image and corresponding label
-	MNIST_Image img;
-	MNIST_Label lbl;
-	#pragma omp critical(readImg)
-	{
-        	img = getImage(imageFile);
-        	lbl = getLabel(labelFile);
-	}
+        MNIST_Image img = getImage(imageFile);
+        MNIST_Label lbl = getLabel(labelFile);
+
         // set target ouput of the number displayed in the current image (=label) to 1, all others to 0
         Vector targetOutput;
         targetOutput = getTargetOutput(lbl);
         
         //displayImage(&img, 6,6);
+        double maxOut = 0;
+        int maxInd = 0;
      
         // loop through all output cells for the given image
+	#pragma omp parallel for
         for (int j=0; j < NUMBER_OF_OUTPUT_CELLS; j++){
             //trainCell(&l->cell[i], &img, targetOutput.val[i]);
 
-
-    	    double unnormalized_err = targetOutput.val[j] * NUMBER_OF_INPUT_CELLS;
-	   //    double temp;
-	   //    c->output=0;
+    	   double unnormalized_err = targetOutput.val[j] * NUMBER_OF_INPUT_CELLS;
+	   //l->cell[j].output=0;
+	   double temp_l_cell_j = 0;
     	   #pragma omp simd
     	   for (int i=0; i<NUMBER_OF_INPUT_CELLS; i++){
 	   	if (img.pixel[i]){
@@ -99,21 +96,23 @@ void trainLayer(Layer *l){
      		//   c->output += temp;
 		//	unnormalized_err = unnormalized_err - c->input[i] * c->weight[i];
 		//      c->weight[i] += LEARNING_RATE * c->input[i] * unnormalized_err/NUMBER_OF_INPUT_CELLS;
-
+			temp_l_cell_j += l->cell[j].weight[i];
 			unnormalized_err = unnormalized_err - l->cell[j].weight[i];
        	 	//	c->weight[i] += LEARNING_RATE * unnormalized_err/NUMBER_OF_INPUT_CELLS;
 			l->cell[j].weight[i] += 0.0000637755 * unnormalized_err;
 		}
    	    }
-
-   	    // c->output = c->output/NUMBER_OF_INPUT_CELLS;
-   
-
-
-        }
+   	    l->cell[j].output = temp_l_cell_j/NUMBER_OF_INPUT_CELLS;
         
-        int predictedNum = getLayerPrediction(l);
-        if (predictedNum!=lbl) errCount++;
+        
+            if (l->cell[j].output > maxOut){
+            	maxOut = l->cell[j].output;
+            	maxInd = j;
+            }
+    	}
+
+
+        if (maxInd!=lbl) errCount++;
         
         //printf("\n      Prediction: %d   Actual: %d ",predictedNum, lbl);
 
@@ -158,7 +157,7 @@ void testLayer(Layer *l){
     int readImg;
 
     // Loop through all images in the file
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for (int imgCount=0; imgCount<MNIST_MAX_TESTING_IMAGES; imgCount++){
         
         // display progress
@@ -167,7 +166,7 @@ void testLayer(Layer *l){
         // Reading next image and corresponding label
 	MNIST_Image img;
 	MNIST_Label lbl;
-	#pragma omp critical(readImg)
+	//#pragma omp critical(readImg)
 	{
         	img = getImage(imageFile);
         	lbl = getLabel(labelFile);
@@ -180,8 +179,22 @@ void testLayer(Layer *l){
        // displayImage(&img, 8,6);
         
         // loop through all output cells for the given image
-        for (int i=0; i < NUMBER_OF_OUTPUT_CELLS; i++){
-            testCell(&l->cell[i], &img, targetOutput.val[i]);
+	#pragma omp parallel for
+        for (int j=0; j < NUMBER_OF_OUTPUT_CELLS; j++){
+            //testCell(&l->cell[i], &img, targetOutput.val[i]);
+
+            double temp = 0; 
+    	    #pragma omp simd
+    	    for (int i=0; i<NUMBER_OF_INPUT_CELLS; i++){
+            //c->input[i] = img->pixel[i] ? 1 : 0;
+	    	if (img.pixel[i]){
+        	   temp += l->cell[j].weight[i];
+	    	}
+    	    }
+    
+    	    l->cell[j].output = temp/NUMBER_OF_INPUT_CELLS;       
+
+
         }
         
         int predictedNum = getLayerPrediction(l);
